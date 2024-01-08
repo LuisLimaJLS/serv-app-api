@@ -13,18 +13,19 @@ class Abonado():
                 id_ruta=None,
                 situacion=None) -> None:
         self.id=id
-        self.id_predio=id_predio,
-        self.id_categoria=id_categoria,
-        self.nro_medidor=nro_medidor,
-        self.estado=estado,
-        self.fecha_instalacion=fecha_instalacion,
-        self.marca_medidor=marca_medidor,
-        self.direccion=direccion,
-        self.secuencia=secuencia,
-        self.observacion=observacion,
-        self.id_cliente=id_cliente,
-        self.id_ruta=id_ruta,
+        self.id_predio=id_predio
+        self.id_categoria=id_categoria
+        self.nro_medidor=nro_medidor
+        self.estado=estado
+        self.fecha_instalacion=fecha_instalacion
+        self.marca_medidor=marca_medidor
+        self.direccion=direccion
+        self.secuencia=secuencia
+        self.observacion=observacion
+        self.id_cliente=id_cliente
+        self.id_ruta=id_ruta
         self.situacion=situacion
+
     
     def to_JSON(self):
         return {

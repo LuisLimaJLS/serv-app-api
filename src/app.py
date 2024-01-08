@@ -11,7 +11,7 @@ def page_not_found(error):
 if __name__=='__main__':
     app.config.from_object(config['development'])
     #Blueprints
-    app.register_blueprint(app_routes.main, url_prefix='/api/abonados')
+    app.register_blueprint(app_routes.main, url_prefix='/api')
     #error handlers
     app.register_error_handler(404, page_not_found)
     app.run()

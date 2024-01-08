@@ -11,14 +11,30 @@ class AbonadoModel():
             abonados=[]
 
             with connection.cursor() as cursor:
-                cursor.execute("SELECT id,id_predio,id_categoria,nro_medidor,estado,fecha_instalacion,marca_medidor,direccion,secuencia,observacion,id_cliente,id_ruta,situacion FROM abonado ORDER BY id")
+                cursor.execute("SELECT * FROM	get_all_abonados_data()")
                 
                 resultset=cursor.fetchall()
                 for row in resultset:
                     abonado=Abonado(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12])
-                    print(abonado)
                     abonados.append(abonado.to_JSON())
             
+            connection.close()
+            return abonados
+        except Exception as ex:
+            raise Exception(ex)
+        
+    @classmethod
+    def get_abonados_by_ci(self, ci):
+        try:
+            connection = get_connection()
+            abonados=[]
+
+            with connection.cursor() as cursor:
+                cursor.execute("select * from get_all_abonados_by_ci(%s)", (ci,))
+                resultset=cursor.fetchall()
+                for row in resultset:
+                    abonado=Abonado(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12])
+                    abonados.append(abonado.to_JSON())
             connection.close()
             return abonados
         except Exception as ex:
