@@ -41,7 +41,13 @@ class AbonadoModel():
                 cursor.execute("select * from get_all_abonados_by_ci(%s)", (ci,))
                 resultset=cursor.fetchall()
                 for row in resultset:
-                    abonado=Abonado(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12])
+                    emisiones = []
+                    cursor.execute("select * from get_emsion_by_abonado (%s, %s)", (row[0],6))
+                    resultset_em=cursor.fetchall()
+                    for row_em in resultset_em:
+                        emision=AbonadoEmision(row_em[0],row_em[1],row_em[2],row_em[3],row_em[4],row_em[5],row_em[6],row_em[7])
+                        emisiones.append(emision.to_JSON())
+                    abonado=Abonado(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12],emisiones)
                     abonados.append(abonado.to_JSON())
             connection.close()
             return abonados

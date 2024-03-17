@@ -11,7 +11,8 @@ class Abonado():
                 observacion=None,
                 id_cliente=None,
                 id_ruta=None,
-                situacion=None) -> None:
+                situacion=None,
+                emisiones=None) -> None:
         self.id=id
         self.id_predio=id_predio
         self.id_categoria=id_categoria
@@ -25,6 +26,7 @@ class Abonado():
         self.id_cliente=id_cliente
         self.id_ruta=id_ruta
         self.situacion=situacion
+        self.emisiones=emisiones
 
     
     def to_JSON(self):
@@ -41,5 +43,6 @@ class Abonado():
             'observacion': self.observacion,
             'id_cliente': self.id_cliente,
             'id_ruta': self.id_ruta,
-            'situacion': self.situacion
+            'situacion': self.situacion,
+            'emisiones': self.emisiones
         }

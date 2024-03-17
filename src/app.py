@@ -14,4 +14,4 @@ if __name__=='__main__':
     app.register_blueprint(app_routes.main, url_prefix='/api')
     #error handlers
     app.register_error_handler(404, page_not_found)
-    app.run()
+    app.run(host='0.0.0.0')
