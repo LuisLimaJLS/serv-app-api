@@ -361,20 +361,22 @@ select * from get_rubros_avg_by_abonado(115147, 6) ;
 ----VER EL HISTORIA DE UN USUARIO POR NRO DE IDENTIFICADOR
 CREATE OR REPLACE FUNCTION get_all_history_by_ci("identificador" text) 
 RETURNS TABLE(
-  id_abonado int8,
+    id_abonado int8,
 	id_emision int8,
-  nro_medidor varchar,
+    nro_medidor varchar,
 	emision varchar,
 	fecha_emision date,
 	novedad varchar,
+	lectura_actual int4,
+	lectura_anterior int4,
 	consumo int4,
 	valor float8,
 	estado int4,
-	pagado int4
+	pagado int4,
+	fecha_cobro date
 ) AS $BODY$
 BEGIN
 RETURN QUERY
-
 	SELECT 
 	ab.id id_abonado,
 	ea.id id_emision,
@@ -382,10 +384,13 @@ RETURN QUERY
 	pe.emision,
 	ea.fecha_emision,
 	ea.novedad,
+	ea.lectura_actual::int4 consumo,
+	ea.lectura_anterior::int4 consumo,
 	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
 	f.valor,
 	f.estado,
-	f.pagado
+	f.pagado,
+	f.fecha_cobro
 	FROM 
 	abonado ab
 	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
@@ -400,9 +405,54 @@ RETURN QUERY
 $BODY$ LANGUAGE plpgsql;
 
 select * from get_all_history_by_ci('5604816896') ;
+----VER EL HISTORIAL DE UN USUARIO POR ABONADO
+CREATE OR REPLACE FUNCTION get_all_history_by_abonado("id_ab" int8) 
+RETURNS TABLE(
+  id_abonado int8,
+	id_emision int8,
+  nro_medidor varchar,
+	emision varchar,
+	fecha_emision date,
+	novedad varchar,
+	lectura_actual int4,
+	lectura_anterior int4,
+	consumo int4,
+	valor float8,
+	estado int4,
+	pagado int4,
+	fecha_cobro date
+) AS $BODY$
+BEGIN
+RETURN QUERY
+	SELECT 
+	ab.id id_abonado,
+	ea.id id_emision,
+	ab.nro_medidor,
+	pe.emision,
+	ea.fecha_emision,
+	ea.novedad,
+	ea.lectura_actual::int4 consumo,
+	ea.lectura_anterior::int4 consumo,
+	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
+	f.valor,
+	f.estado,
+	f.pagado,
+	f.fecha_cobro
+	FROM 
+	abonado ab
+	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
+	INNER JOIN periodo_emision_ruta per ON per.id =ea.id_periodo_emision_ruta
+	INNER JOIN periodo_emision pe ON pe.id = per.id_periodo_emision
+	INNER JOIN factura f ON f.id = ea.id_factura
+	INNER JOIN cliente cl ON cl.id=ab.id_cliente
+	WHERE
+	ab.id = $1
+	ORDER BY ea.fecha_emision desc;
+	END;
+$BODY$ LANGUAGE plpgsql;
 
 
-
+select * from get_all_history_by_abonado(145965) ;
 
 
 

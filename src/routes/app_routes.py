@@ -106,3 +106,14 @@ def get_all_history_by_ci(ci):
             return jsonify({}), 404
     except Exception as ex:
         return jsonify({'message': str(ex)}), 500
+    
+@main.route('/historyByAbonado/<id_abonado>')
+def get_all_history_by_abonado(id_abonado):
+    try:
+        histories=AbonadoModel.get_all_history_by_abonado(id_abonado)
+        if histories != None:
+            return jsonify(histories)
+        else:
+            return jsonify({}), 404
+    except Exception as ex:
+        return jsonify({'message': str(ex)}), 500

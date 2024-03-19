@@ -146,7 +146,27 @@ class AbonadoModel():
                 cursor.execute("select * from get_all_history_by_ci(%s)", (ci,))
                 resultset=cursor.fetchall()
                 for row in resultset:
-                    history=History(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9])
+                    history=History(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12])
+                    histories.append(history.to_JSON())
+            connection.close()
+            return histories
+        except Exception as ex:
+            raise Exception(ex)
+    
+    
+    '''
+    Obtener el historial de emisiones de un medidor por el id
+    '''
+    @classmethod
+    def get_all_history_by_abonado(self, id_abonado):
+        try:
+            connection = get_connection()
+            histories = []
+            with connection.cursor() as cursor:
+                cursor.execute("select * from get_all_history_by_abonado(%s)", (id_abonado,))
+                resultset=cursor.fetchall()
+                for row in resultset:
+                    history=History(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12])
                     histories.append(history.to_JSON())
             connection.close()
             return histories
