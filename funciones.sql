@@ -359,6 +359,7 @@ select * from get_rubros_avg_by_abonado(115147, 6) ;
 
 
 ----VER EL HISTORIA DE UN USUARIO POR NRO DE IDENTIFICADOR
+----VER EL HISTORIA DE UN USUARIO POR NRO DE IDENTIFICADOR
 CREATE OR REPLACE FUNCTION get_all_history_by_ci("identificador" text) 
 RETURNS TABLE(
     id_abonado int8,
@@ -384,8 +385,8 @@ RETURN QUERY
 	pe.emision,
 	ea.fecha_emision,
 	ea.novedad,
-	ea.lectura_actual::int4 consumo,
-	ea.lectura_anterior::int4 consumo,
+	ea.lectura_actual::int4 lectura_actual,
+	ea.lectura_anterior::int4 lectura_anterior,
 	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
 	f.valor,
 	f.estado,
@@ -431,8 +432,8 @@ RETURN QUERY
 	pe.emision,
 	ea.fecha_emision,
 	ea.novedad,
-	ea.lectura_actual::int4 consumo,
-	ea.lectura_anterior::int4 consumo,
+	ea.lectura_actual::int4 lectura_actual,
+	ea.lectura_anterior::int4 lectura_anterior,
 	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
 	f.valor,
 	f.estado,
@@ -456,6 +457,97 @@ select * from get_all_history_by_abonado(145965) ;
 
 
 
+--FUNCION PARA HACER BUSQUEDASS
+CREATE OR REPLACE FUNCTION get_all_search_by_ci("buscar" text,"identificador" text) 
+RETURNS TABLE(
+  id_abonado int8,
+	id_emision int8,
+  nro_medidor varchar,
+	emision varchar,
+	fecha_emision date,
+	consumo int4,
+	valor float8,
+	estado int4,
+	pagado int4,
+	id_ruta varchar,
+	id_predio varchar,
+	id_categoria varchar,
+	novedad varchar,
+	lectura_actual int4,
+	lectura_anterior int4,
+	promedio_consumo int4,
+	promedio_valor float8,
+	fecha_cobro date
+) AS $BODY$
+BEGIN
+IF 'full' = $1::text THEN
+	RETURN QUERY 
+  SELECT 
+	ab.id id_abonado,
+	ea.id id_emision,
+	ab.nro_medidor,
+	pe.emision::varchar,
+	ea.fecha_emision,
+	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
+	f.valor,
+	f.estado,
+	f.pagado,
+	(SELECT * FROM get_ruta_by_abonado (ab.id))::VARCHAR id_ruta,
+	(SELECT clave  FROM predio pr WHERE pr.id = ab.id_predio)::VARCHAR id_predio,
+  (SELECT descripcion FROM categoria cat WHERE cat.id = ab.id_categoria)::VARCHAR id_categoria,
+	ea.novedad,
+	ea.lectura_actual::int4 lectura_actual,
+	ea.lectura_anterior::int4 lectura_anterior,
+	(select p1.promedio_consumo from get_avg_by_abonado_emi(ab.id, ea.id, 6) p1)::int4 promedio_consumo,
+	(select p2.promedio_valor from get_avg_by_abonado_emi(ab.id, ea.id, 6) p2)::float8 promedio_valor,
+	f.fecha_cobro
+	FROM 
+	abonado ab
+	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
+	INNER JOIN periodo_emision_ruta per ON per.id =ea.id_periodo_emision_ruta
+	INNER JOIN periodo_emision pe ON pe.id = per.id_periodo_emision
+	INNER JOIN factura f ON f.id = ea.id_factura
+	INNER JOIN cliente cl ON cl.id=ab.id_cliente
+	WHERE
+	cl.identificador = $2
+	ORDER BY ea.fecha_emision desc;
+ELSE
+RETURN QUERY 
+  SELECT 
+	ab.id id_abonado,
+	ea.id id_emision,
+	ab.nro_medidor,
+	pe.emision,
+	ea.fecha_emision,
+	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
+	f.valor,
+	f.estado,
+	f.pagado,
+	null::VARCHAR id_ruta, --(SELECT * FROM get_ruta_by_abonado (ab.id))::VARCHAR id_ruta,
+	null::VARCHAR id_predio, --(SELECT clave  FROM predio pr WHERE pr.id = ab.id_predio) id_predio,
+  null::VARCHAR id_categoria, --(SELECT descripcion FROM categoria cat WHERE cat.id = ab.id_categoria) id_categoria,
+	null::VARCHAR novedad, --ea.novedad,
+	null::int4 lectura_actual, --ea.lectura_actual::int4 lectura_actual,
+	null::int4 lectura_anterior, --ea.lectura_anterior::int4 lectura_anterior,
+	null::int4 promedio_consumo, --(select p1.promedio_consumo from get_avg_by_abonado_emi(ab.id, ea.id, 6) p1)::int4 promedio_consumo,
+	null::float8 promedio_valor, --(select p2.promedio_valor from get_avg_by_abonado_emi(ab.id, ea.id, 6) p2)::float8 promedio_valor,
+	null::date fecha_cobro -- f.fecha_cobro
+	FROM 
+	abonado ab
+	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
+	INNER JOIN periodo_emision_ruta per ON per.id =ea.id_periodo_emision_ruta
+	INNER JOIN periodo_emision pe ON pe.id = per.id_periodo_emision
+	INNER JOIN factura f ON f.id = ea.id_factura
+	INNER JOIN cliente cl ON cl.id=ab.id_cliente
+	WHERE
+	cl.identificador = $2
+	ORDER BY ea.fecha_emision desc;
+END IF;
+END;
+$BODY$ LANGUAGE plpgsql;
+
+
+select * from get_all_search_by_ci('full','2506716965001');
 
 
 --nro medidor aleatorio

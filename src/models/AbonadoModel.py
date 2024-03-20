@@ -1,4 +1,5 @@
 from database.db import get_connection
+from .entities.Search import Search
 from .entities.Abonado import Abonado
 from .entities.Cliente import Cliente
 from .entities.PromedioMedior import PromedioMedidor
@@ -170,5 +171,26 @@ class AbonadoModel():
                     histories.append(history.to_JSON())
             connection.close()
             return histories
+        except Exception as ex:
+            raise Exception(ex)
+        
+    '''
+    Obtener la busqueda de emisiones de un cliente por el ci
+    '''
+    @classmethod
+    def get_all_search_by_ci(self, type, ci, src):
+        try:
+            connection = get_connection()
+            results = []
+            with connection.cursor() as cursor:
+                cursor.execute("select * from get_all_search_by_ci(%s,%s) limit 100", (type,ci))
+                resultset=cursor.fetchall()
+                for row in resultset:
+                    result=Search(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12],row[13],row[14],row[15],row[16],row[17])
+                    print (result)
+                    results.append(result.to_JSON())
+            connection.close()
+            results_filter = [item for item in results if any(src in str(valor) for valor in item.values())]
+            return results_filter
         except Exception as ex:
             raise Exception(ex)

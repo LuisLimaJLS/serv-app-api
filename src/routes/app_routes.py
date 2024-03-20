@@ -117,3 +117,25 @@ def get_all_history_by_abonado(id_abonado):
             return jsonify({}), 404
     except Exception as ex:
         return jsonify({'message': str(ex)}), 500
+    
+@main.route('/SearchByCIFull/<ci>/<src>')
+def get_all_search_by_ci_full(ci, src):
+    try:
+        results=AbonadoModel.get_all_search_by_ci('full', ci, src)
+        if results != None:
+            return jsonify(results)
+        else:
+            return jsonify({}), 404
+    except Exception as ex:
+        return jsonify({'message': str(ex)}), 500
+    
+@main.route('/SearchByCIMin/<ci>/<src>')
+def get_all_search_by_ci_min(ci, src):
+    try:
+        results=AbonadoModel.get_all_search_by_ci('min', ci, src)
+        if results != None:
+            return jsonify(results)
+        else:
+            return jsonify({}), 404
+    except Exception as ex:
+        return jsonify({'message': str(ex)}), 500
