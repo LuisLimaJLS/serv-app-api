@@ -1,5 +1,6 @@
 from flask import Flask
 from config import config
+from flask_cors import CORS
 
 #Rutes
 from routes import app_routes
@@ -10,6 +11,8 @@ def page_not_found(error):
 
 if __name__=='__main__':
     app.config.from_object(config['development'])
+    # Registro de extensiones
+    CORS(app)  # Aquí se aplica Flask-CORS a la aplicación Flask
     #Blueprints
     app.register_blueprint(app_routes.main, url_prefix='/api')
     #error handlers
