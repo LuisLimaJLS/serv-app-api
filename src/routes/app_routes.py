@@ -13,10 +13,10 @@ def get_abonados():
     except Exception as ex:
         return jsonify({'message': str(ex)}), 500
     
-@main.route('/abonadosByCI/<ci>')
-def get_abonados_by_client(ci):
+@main.route('/abonadosByCI/<ci>/<nro_meses>')
+def get_abonados_by_client(ci, nro_meses):
     try:
-        abonados=AbonadoModel.get_abonados_by_ci(ci)
+        abonados=AbonadoModel.get_abonados_by_ci(ci, nro_meses)
         if abonados != None:
             return jsonify(abonados)
         else:
@@ -40,8 +40,8 @@ def get_cliente_by_ci(ci):
 @main.route('/auth/login', methods=['POST'])
 def get_auth():
     try:
-        identificador=request.json['identificador']
-        contrasena=request.json['contrasena']
+        identificador=request.json['identifier']
+        contrasena=request.json['password']
         cliente=AbonadoModel.get_cliente_by_ci(identificador)
         if cliente != None:
             if contrasena == cliente['contrasena']:

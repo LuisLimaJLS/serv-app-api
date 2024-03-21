@@ -33,7 +33,7 @@ class AbonadoModel():
     Obtener todos los abonados por identificador del cliente
     '''
     @classmethod
-    def get_abonados_by_ci(self, ci):
+    def get_abonados_by_ci(self, ci, nro_meses):
         try:
             connection = get_connection()
             abonados=[]
@@ -43,7 +43,7 @@ class AbonadoModel():
                 resultset=cursor.fetchall()
                 for row in resultset:
                     emisiones = []
-                    cursor.execute("select * from get_emsion_by_abonado (%s, %s)", (row[0],6))
+                    cursor.execute("select * from get_emsion_by_abonado (%s, %s)", (row[0],nro_meses))
                     resultset_em=cursor.fetchall()
                     for row_em in resultset_em:
                         emision=AbonadoEmision(row_em[0],row_em[1],row_em[2],row_em[3],row_em[4],row_em[5],row_em[6],row_em[7])
