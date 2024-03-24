@@ -139,3 +139,14 @@ def get_all_search_by_ci_min(ci, src):
             return jsonify({}), 404
     except Exception as ex:
         return jsonify({'message': str(ex)}), 500
+    
+@main.route('/getDetailValuesByAbonado/<id>/<nro_meses>')
+def get_detail_values_by_abonado(id, nro_meses):
+    try:
+        results=AbonadoModel.get_detail_values_by_abonado(id, nro_meses)
+        if results != None:
+            return jsonify(results)
+        else:
+            return jsonify({}), 404
+    except Exception as ex:
+        return jsonify({'message': str(ex)}), 500

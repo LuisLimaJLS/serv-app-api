@@ -153,7 +153,49 @@ $BODY$ LANGUAGE plpgsql;
 
 select * from get_all_abonados_by_ci('5604816896');
 
+-- FUNCION PARA OBETENER CUENTAS POR SU ID
+CREATE OR REPLACE FUNCTION get_all_abonados_by_id("id_abo" int8) 
+RETURNS TABLE(
+  id int8 ,
+  id_predio varchar ,
+  id_categoria varchar ,
+  nro_medidor varchar,
+  estado int4,
+  fecha_instalacion date ,
+  marca_medidor varchar,
+  direccion varchar,
+  secuencia int8,
+  observacion varchar,
+  id_cliente varchar ,
+  id_ruta varchar ,
+  situacion varchar
+) AS $BODY$
+BEGIN
+RETURN QUERY
+SELECT 
+  ab.ID,
+  (SELECT clave  FROM predio pr WHERE pr.id = ab.id_predio) id_predio,
+  (SELECT descripcion FROM categoria cat WHERE cat.id = ab.id_categoria) id_categoria,
+  ab.nro_medidor,
+  ab.estado,
+  ab.fecha_instalacion,
+  ab.marca_medidor,
+  ab.direccion,
+  ab.secuencia,
+  ab.observacion,
+  (SELECT * FROM get_cliente_by_id (ab.id_cliente))::VARCHAR id_cliente,
+  (SELECT * FROM get_ruta_by_abonado (ab.id))::VARCHAR id_ruta,
+  ab.situacion 
+FROM
+  abonado ab
+  INNER JOIN cliente cl on ab.id_cliente = cl.id
+  and ab.id = $1
+ORDER BY
+  ab.ID;
+END;
+$BODY$ LANGUAGE plpgsql;
 
+select * from get_all_abonados_by_id(117325);
 
 -- FUNCION PARA OBETENER CLIENTE POR CI
 CREATE OR REPLACE FUNCTION get_cliente_by_ci("ci" text) 
@@ -548,6 +590,43 @@ $BODY$ LANGUAGE plpgsql;
 
 
 select * from get_all_search_by_ci('full','2506716965001');
+
+
+--FINCIOM PARA OTENER EL DETALLE DE LOS RUBROS DE LOS ULTIMOS N MESES DE UN ABONADO
+CREATE OR REPLACE FUNCTION "public"."get_detail_values_by_abonado"("id_abo" int8, "nro_meses" int4)
+  RETURNS TABLE("id_rubro" int8, "descripcion" varchar, "cantidad" float8, "valor_unitario" float8, "valor" float8) AS $BODY$
+BEGIN
+RETURN QUERY
+	SELECT 
+	r.id id_rubro,
+  r.descripcion,
+	ROUND(SUM(fd.cantidad)::numeric,2)::float8 cantidad,
+	ROUND((SUM(fd.valor_unitario)/SUM(fd.cantidad))::numeric,2)::float8 valor_unitario,
+	ROUND(SUM(fd.cantidad * fd.valor_unitario)::numeric,2)::float8 valor
+	from factura_detalle fd
+	INNER JOIN rubro r ON fd.id_rubro = r.id
+	WHERE fd.estado=1 and fd.id_factura in (
+	SELECT 
+	f.id
+	FROM 
+	abonado ab
+	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
+	INNER JOIN periodo_emision_ruta per ON per.id =ea.id_periodo_emision_ruta
+	INNER JOIN periodo_emision pe ON pe.id = per.id_periodo_emision
+	INNER JOIN factura f ON f.id = ea.id_factura
+	WHERE
+	ab.id = $1
+	ORDER BY ea.id desc
+	limit $2)
+	GROUP BY r.id, r.descripcion
+	ORDER BY 5;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+
+	select * from get_detail_values_by_abonado (115147,6)
 
 
 --nro medidor aleatorio
