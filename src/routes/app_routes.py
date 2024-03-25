@@ -150,3 +150,14 @@ def get_detail_values_by_abonado(id, nro_meses):
             return jsonify({}), 404
     except Exception as ex:
         return jsonify({'message': str(ex)}), 500
+    
+@main.route('/dataByEmission/<id_emision>/<nro_meses>')
+def get_all_data_by_emision(id_emision, nro_meses):
+    try:
+        emision=AbonadoModel.get_all_data_by_emision(id_emision, nro_meses)
+        if emision != None:
+            return jsonify(emision)
+        else:
+            return jsonify({}), 404
+    except Exception as ex:
+        return jsonify({'message': str(ex)}), 500

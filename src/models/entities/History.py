@@ -13,7 +13,8 @@ class History():
                 valor=None,
                 estado=None,
                 pagado=None,
-                fecha_cobro=None) -> None:
+                fecha_cobro=None,
+                nro_factura=None) -> None:
         self.id_abonado=id_abonado
         self.id_emision=id_emision
         self.nro_medidor=nro_medidor
@@ -27,6 +28,7 @@ class History():
         self.estado=estado
         self.pagado=pagado
         self.fecha_cobro=fecha_cobro
+        self.nro_factura=nro_factura
     
     def to_JSON(self):
         return {
@@ -42,5 +44,5 @@ class History():
             'valor': self.valor,
             'estado': self.estado,
             'pagado': self.pagado,
-            'fecha_cobro': self.fecha_cobro
+            'nro_factura': self.nro_factura
         }

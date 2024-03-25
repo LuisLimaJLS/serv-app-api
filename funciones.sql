@@ -416,7 +416,8 @@ RETURNS TABLE(
 	valor float8,
 	estado int4,
 	pagado int4,
-	fecha_cobro date
+	fecha_cobro date,
+	nro_factura varchar
 ) AS $BODY$
 BEGIN
 RETURN QUERY
@@ -433,7 +434,8 @@ RETURN QUERY
 	f.valor,
 	f.estado,
 	f.pagado,
-	f.fecha_cobro
+	f.fecha_cobro,
+	f.nro_factura
 	FROM 
 	abonado ab
 	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
@@ -463,7 +465,8 @@ RETURNS TABLE(
 	valor float8,
 	estado int4,
 	pagado int4,
-	fecha_cobro date
+	fecha_cobro date,
+	nro_factura varchar
 ) AS $BODY$
 BEGIN
 RETURN QUERY
@@ -480,7 +483,8 @@ RETURN QUERY
 	f.valor,
 	f.estado,
 	f.pagado,
-	f.fecha_cobro
+	f.fecha_cobro,
+	f.nro_factura
 	FROM 
 	abonado ab
 	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
@@ -494,8 +498,7 @@ RETURN QUERY
 	END;
 $BODY$ LANGUAGE plpgsql;
 
-
-select * from get_all_history_by_abonado(145965) ;
+select * from get_all_history_by_abonado(145965);
 
 
 
@@ -628,6 +631,150 @@ $BODY$
 
 	select * from get_detail_values_by_abonado (115147,6)
 
+--FUNCION PARA OBTENER LOS DATOS DE UNA EMISION POR EL ID
+CREATE OR REPLACE FUNCTION "public"."get_emsion_by_id"("id_emi" int8)
+  RETURNS TABLE("id_abonado" int8, "id_emision" int8, "nro_medidor" varchar, "emision" varchar, "consumo" int4, "valor" float8, "promedio_consumo" int4, "promedio_valor" float8) AS $BODY$
+BEGIN
+RETURN QUERY
+	SELECT 
+	ab.id id_abonado,
+	ea.id id_emision,
+	ab.nro_medidor,
+	pe.emision,
+	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
+	f.valor::float8,
+	(select p1.promedio_consumo from get_avg_by_abonado_emi(ab.id, ea.id) p1)::int4 promedio_consumo,
+	(select p2.promedio_valor from get_avg_by_abonado_emi(ab.id, ea.id) p2)::float8 promedio_valor
+	FROM 
+	abonado ab
+	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
+	INNER JOIN periodo_emision_ruta per ON per.id =ea.id_periodo_emision_ruta
+	INNER JOIN periodo_emision pe ON pe.id = per.id_periodo_emision
+	INNER JOIN factura f ON f.id = ea.id_factura
+	WHERE
+	ea.id = $1;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+	
+select * from get_emsion_by_id(2161559);
+
+--funcion para obtener los rubros de una determinada emision:
+CREATE OR REPLACE FUNCTION "public"."get_detail_values_by_emision"("id_emi" int8)
+  RETURNS TABLE("id_rubro" int8, "descripcion" varchar, "cantidad" float8, "valor_unitario" float8, "valor" float8) AS $BODY$
+BEGIN
+RETURN QUERY
+	SELECT 
+	r.id id_rubro,
+	r.descripcion,
+	fd.cantidad::float8 cantidad,
+	fd.valor_unitario::float8 valor_unitario,
+	(fd.cantidad *fd.valor_unitario)::float8 valor
+	FROM 
+	abonado ab
+	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
+	INNER JOIN periodo_emision_ruta per ON per.id =ea.id_periodo_emision_ruta
+	INNER JOIN periodo_emision pe ON pe.id = per.id_periodo_emision
+	INNER JOIN factura f ON f.id = ea.id_factura
+	INNER JOIN factura_detalle fd on fd.id_factura=f.id
+	INNER JOIN rubro r on fd.id_rubro = r.id
+	WHERE
+	fd.estado = 1
+	and	ea.id = $1
+	ORDER BY 5;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+	
+select * from get_detail_values_by_emision(2148961);
+
+
+--FUNCION PARA OBETENR LAS N EMISIONES ANTERIORES DESDE UNA ESPECIFICA:
+CREATE OR REPLACE FUNCTION "public"."get_emsions_history_by_id"("id_emi" int8, "nro_meses" int4)
+  RETURNS TABLE("id_abonado" int8, "id_emision" int8, "nro_medidor" varchar, "emision" varchar, "consumo" int4, "valor" float8, "promedio_consumo" int4, "promedio_valor" float8) AS $BODY$
+BEGIN
+RETURN QUERY
+	SELECT 
+	ab.id id_abonado,
+	ea.id id_emision,
+	ab.nro_medidor,
+	pe.emision,
+	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
+	f.valor::float8,
+	(select p1.promedio_consumo from get_avg_by_abonado_emi(ab.id, ea.id) p1)::int4 promedio_consumo,
+	(select p2.promedio_valor from get_avg_by_abonado_emi(ab.id, ea.id) p2)::float8 promedio_valor
+	FROM 
+	abonado ab
+	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
+	INNER JOIN periodo_emision_ruta per ON per.id =ea.id_periodo_emision_ruta
+	INNER JOIN periodo_emision pe ON pe.id = per.id_periodo_emision
+	INNER JOIN factura f ON f.id = ea.id_factura
+	WHERE
+	ab.id = (select ea2.id_abonado from emision_abonado ea2 WHERE ea2.id = $1)
+	and ea.id <= $1
+	ORDER BY ea.id desc
+	limit $2;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+	
+select * from get_emsions_history_by_id(2136393, 6);
+
+--FUNCION PARA OBTENER EL HISTORIAL DE UNA EMISION ESPECIFICA:
+CREATE OR REPLACE FUNCTION get_history_by_emision("id_emi" int8) 
+RETURNS TABLE(
+  id_abonado int8,
+	id_emision int8,
+  nro_medidor varchar,
+	emision varchar,
+	fecha_emision date,
+	novedad varchar,
+	lectura_actual int4,
+	lectura_anterior int4,
+	consumo int4,
+	valor float8,
+	estado int4,
+	pagado int4,
+	fecha_cobro date,
+	nro_factura varchar
+) AS $BODY$
+BEGIN
+RETURN QUERY
+	SELECT 
+	ab.id id_abonado,
+	ea.id id_emision,
+	ab.nro_medidor,
+	pe.emision,
+	ea.fecha_emision,
+	ea.novedad,
+	ea.lectura_actual::int4 lectura_actual,
+	ea.lectura_anterior::int4 lectura_anterior,
+	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
+	f.valor,
+	f.estado,
+	f.pagado,
+	f.fecha_cobro,
+	f.nro_factura
+	FROM 
+	abonado ab
+	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
+	INNER JOIN periodo_emision_ruta per ON per.id =ea.id_periodo_emision_ruta
+	INNER JOIN periodo_emision pe ON pe.id = per.id_periodo_emision
+	INNER JOIN factura f ON f.id = ea.id_factura
+	INNER JOIN cliente cl ON cl.id=ab.id_cliente
+	WHERE
+	ea.id = $1
+	ORDER BY ea.fecha_emision desc;
+	END;
+$BODY$ LANGUAGE plpgsql;
+
+select * from get_history_by_emision(2136393);
 
 --nro medidor aleatorio
 select ('MED-'||"substring"("upper"(MD5(random()::text)), 0, 10) ), * from abonado;

@@ -2,6 +2,7 @@ from database.db import get_connection
 from .entities.Rubro import Rubro
 from .entities.Search import Search
 from .entities.Abonado import Abonado
+from .entities.Emision import Emision
 from .entities.Cliente import Cliente
 from .entities.PromedioMedior import PromedioMedidor
 from .entities.AbonadoEmision import AbonadoEmision
@@ -172,7 +173,7 @@ class AbonadoModel():
                 cursor.execute("select * from get_all_history_by_ci(%s)", (ci,))
                 resultset=cursor.fetchall()
                 for row in resultset:
-                    history=History(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12])
+                    history=History(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12],row[13])
                     histories.append(history.to_JSON())
             connection.close()
             return histories
@@ -192,7 +193,7 @@ class AbonadoModel():
                 cursor.execute("select * from get_all_history_by_abonado(%s)", (id_abonado,))
                 resultset=cursor.fetchall()
                 for row in resultset:
-                    history=History(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12])
+                    history=History(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12],row[13])
                     histories.append(history.to_JSON())
             connection.close()
             return histories
@@ -237,5 +238,44 @@ class AbonadoModel():
                     details.append(detail.to_JSON())
             connection.close()
             return details
+        except Exception as ex:
+            raise Exception(ex)
+        
+    
+    '''
+    Obtener todos los datos de una emision
+    '''
+    @classmethod
+    def get_all_data_by_emision(self, id_emision, nro_meses):
+        try:
+            connection = get_connection()
+            emisiones = []
+            rubros = []
+            histories = []
+            my_emision = None
+            with connection.cursor() as cursor:
+                #historial de emisiones
+                cursor.execute("select * from get_emsions_history_by_id(%s,%s)", (id_emision,nro_meses))
+                resultset_em=cursor.fetchall()
+                for row_em in resultset_em:
+                    emision=AbonadoEmision(row_em[0],row_em[1],row_em[2],row_em[3],row_em[4],row_em[5],row_em[6],row_em[7])
+                    emisiones.append(emision.to_JSON())
+                #obtener rubros
+                cursor.execute("select * from get_detail_values_by_emision(%s)", (id_emision,))
+                resultset_ru=cursor.fetchall()
+                for row_ru in resultset_ru:
+                    rubro=Rubro(row_ru[0],row_ru[1],row_ru[2],row_ru[3],row_ru[4])
+                    rubros.append(rubro.to_JSON())
+                #obtener historial
+                cursor.execute("select * from get_history_by_emision(%s)", (id_emision,))
+                resultset_hi=cursor.fetchall()
+                for row_hi in resultset_hi:
+                    history=History(row_hi[0],row_hi[1],row_hi[2],row_hi[3],row_hi[4],row_hi[5],row_hi[6],row_hi[7],row_hi[8],row_hi[9],row_hi[10],row_hi[11],row_hi[12],row_hi[13])
+                    histories.append(history.to_JSON())
+
+                my_emision=Emision(id_emision,emisiones,rubros,histories[0])
+
+            connection.close()
+            return my_emision.to_JSON()
         except Exception as ex:
             raise Exception(ex)
