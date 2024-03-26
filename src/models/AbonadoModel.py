@@ -279,3 +279,23 @@ class AbonadoModel():
             return my_emision.to_JSON()
         except Exception as ex:
             raise Exception(ex)
+        
+
+    '''
+    Obtener los consumos mayores al promedio de los ultimoos n meses
+    '''   
+    @classmethod
+    def get_max_emsion_alert_by_ci(self, ci, nro_meses):
+        try:
+            connection = get_connection()
+            emisiones = []
+            with connection.cursor() as cursor:
+                cursor.execute("select * from get_max_emsion_alert_by_ci (%s, %s)", (ci,nro_meses))
+                resultset=cursor.fetchall()
+                for row in resultset:
+                    emision=AbonadoEmision(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7])
+                    emisiones.append(emision.to_JSON())
+            connection.close()
+            return emisiones
+        except Exception as ex:
+            raise Exception(ex)

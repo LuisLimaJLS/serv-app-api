@@ -161,3 +161,14 @@ def get_all_data_by_emision(id_emision, nro_meses):
             return jsonify({}), 404
     except Exception as ex:
         return jsonify({'message': str(ex)}), 500
+
+@main.route('/maxEmsionAlertByCi/<ci>/<nro_meses>')
+def get_max_emsion_alert_by_ci(ci, nro_meses):
+    try:
+        alerts=AbonadoModel.get_max_emsion_alert_by_ci(ci, nro_meses)
+        if alerts != None:
+            return jsonify(alerts)
+        else:
+            return jsonify({}), 404
+    except Exception as ex:
+        return jsonify({'message': str(ex)}), 500
