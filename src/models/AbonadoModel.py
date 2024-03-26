@@ -69,7 +69,7 @@ class AbonadoModel():
                 row=cursor.fetchone()
                 cliente = None
                 if row != None:
-                    cliente=Cliente(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],False,'')
+                    cliente=Cliente(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7],False,'',row[8])
                     cliente=cliente.to_JSON()
             connection.close()
             return cliente

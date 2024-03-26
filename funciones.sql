@@ -204,10 +204,11 @@ RETURNS TABLE(
   identificador varchar,
   apellidos varchar,
   nombres varchar,
-	direccion varchar,
+  direccion varchar,
   fecha_nacimiento date,
   contrasena varchar,
-	estado int4
+  estado int4,
+  correo_electronico varchar
 ) AS $BODY$
 BEGIN
 RETURN QUERY
@@ -219,7 +220,8 @@ SELECT
 	cl.direccion,
 	cl.fecha_nacimiento,
 	cl.contrasena,
-	cl.estado
+	cl.estado,
+	(select valor from contacto ct WHERE ct.id_cliente = cl.id and ct.descripcion = 'CORREO ELECTRONICO' limit 1) correo_electronico
 FROM 
 	cliente cl
 WHERE 
@@ -775,6 +777,48 @@ RETURN QUERY
 $BODY$ LANGUAGE plpgsql;
 
 select * from get_history_by_emision(2136393);
+
+
+--FUNCION PARA OBTENER LOS CONSUMOS QUE SUPERAN SU PROMEDO DE N MESES ATRAS
+CREATE OR REPLACE FUNCTION get_max_emsion_alert_by_ci("ci" text, "nro_meses" int4 ) 
+RETURNS TABLE(
+  id_abonado int8,
+	id_emision int8,
+  nro_medidor varchar,
+	emision varchar,
+	consumo int4,
+	valor float8,
+	promedio_consumo int4,
+	promedio_valor float8
+) AS $BODY$
+BEGIN
+RETURN QUERY
+	SELECT 
+	ab.id id_abonado,
+	ea.id id_emision,
+	ab.nro_medidor,
+	pe.emision,
+	(ea.lectura_actual-ea.lectura_anterior)::int4 consumo,
+	f.valor::float8,
+	(select p1.promedio_consumo from get_avg_by_abonado_emi(ab.id, ea.id) p1)::int4 promedio_consumo,
+	(select p2.promedio_valor from get_avg_by_abonado_emi(ab.id, ea.id) p2)::float8 promedio_valor
+	FROM 
+	abonado ab
+	INNER JOIN cliente cl ON cl.id = ab.id_cliente
+	INNER JOIN emision_abonado ea ON ea.id_abonado = ab.id
+	INNER JOIN periodo_emision_ruta per ON per.id =ea.id_periodo_emision_ruta
+	INNER JOIN periodo_emision pe ON pe.id = per.id_periodo_emision
+	INNER JOIN factura f ON f.id = ea.id_factura
+	WHERE
+	pe.id in (select pe2.id from periodo_emision pe2 ORDER BY pe2.id desc limit $2)
+	and cl.identificador = $1
+	and (((ea.lectura_actual-ea.lectura_anterior)::int4) > (select p1.promedio_consumo from get_avg_by_abonado_emi(ab.id, ea.id) p1)::int4)
+	ORDER BY ea.id desc;
+END;
+$BODY$ LANGUAGE plpgsql;
+
+select * from get_max_emsion_alert_by_ci ('2506716965001', 6);
+
 
 --nro medidor aleatorio
 select ('MED-'||"substring"("upper"(MD5(random()::text)), 0, 10) ), * from abonado;

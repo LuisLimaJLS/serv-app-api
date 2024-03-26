@@ -2,6 +2,7 @@ from secrets import token_hex
 from flask import Blueprint, jsonify, request
 #models
 from models.AbonadoModel import AbonadoModel
+from models.ServicesModel import ServicesModel
 
 main=Blueprint('app_blueprint', __name__)
 
@@ -168,6 +169,21 @@ def get_max_emsion_alert_by_ci(ci, nro_meses):
         alerts=AbonadoModel.get_max_emsion_alert_by_ci(ci, nro_meses)
         if alerts != None:
             return jsonify(alerts)
+        else:
+            return jsonify({}), 404
+    except Exception as ex:
+        return jsonify({'message': str(ex)}), 500
+
+
+@main.route('/mail/sendMail', methods=['POST'])
+def send_mail():
+    try:
+        identificador=request.json['identifier']
+        subject=request.json['subject']
+        message=request.json['message']
+        response=ServicesModel.send_mail(identificador, subject, message)
+        if response != None:
+            return jsonify(response)
         else:
             return jsonify({}), 404
     except Exception as ex:

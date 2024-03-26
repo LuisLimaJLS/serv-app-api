@@ -9,7 +9,8 @@ class Cliente():
                 contrasena=None,
                 estado=None,
                 autenticado=None,
-                token=None
+                token=None,
+                correo_electronico=None
                 ) -> None:
         self.id=id
         self.identificador=identificador
@@ -21,6 +22,7 @@ class Cliente():
         self.estado=estado
         self.autenticado=autenticado
         self.token=token
+        self.correo_electronico=correo_electronico
 
     def to_JSON(self):
         return {
@@ -33,5 +35,6 @@ class Cliente():
             'contrasena': self.contrasena,
             'estado': self.estado,
             'autenticado': self.autenticado,
-            'token': self.token
+            'token': self.token,
+            'correo_electronico': self.correo_electronico
         }
